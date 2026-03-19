@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Estrai da DXF{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-file-earmark-text"></i> Estrai Testi e Attributi da DXF</h2>
+
+<div class="card mb-4">
+    <div class="card-header">Carica File DXF</div>
+    <div class="card-body">
+        <form id="extractForm" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">File DXF</label>
+                <input type="file" class="form-control" name="dxf_file" accept=".dxf" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-cpu"></i> Estrai Dati
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="results" class="d-none">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            Riepilogo
+            <button class="btn btn-sm btn-success" id="exportBtn">
+                <i class="bi bi-download"></i> Esporta Excel
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row text-center" id="summaryRow"></div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="dataTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="texts-tab" data-bs-toggle="tab" data-bs-target="#texts-pane" type="button">Testi</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="attrs-tab" data-bs-toggle="tab" data-bs-target="#attrs-pane" type="button">Attributi Blocchi</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="texts-pane" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped" id="textsTable">
+                    <thead><tr><th>Tipo</th><th>Testo</th><th>Layer</th><th>X</th><th>Y</th><th>Altezza</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="attrs-pane" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped" id="attrsTable">
+                    <thead><tr><th>Blocco</th><th>Layer</th><th>X</th><th>Y</th><th>Attributo</th><th>Valore</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let extractedData = {};
+
+document.getElementById('extractForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    showSpinner();
+
+    const formData = new FormData(this);
+    try {
+        const resp = await fetch('/extract/analyze', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (data.error) { alert(data.error); hideSpinner(); return; }
+        extractedData = data;
+        showResults(data);
+    } catch(err) { alert('Errore: ' + err.message); }
+    hideSpinner();
+});
+
+function showResults(data) {
+    document.getElementById('results').classList.remove('d-none');
+    document.getElementById('summaryRow').innerHTML = `
+        <div class="col"><div class="p-3 border rounded"><h4>${data.summary.total_texts}</h4><small>Testi</small></div></div>
+        <div class="col"><div class="p-3 border rounded"><h4>${data.summary.total_attributes}</h4><small>Attributi</small></div></div>
+        <div class="col"><div class="p-3 border rounded"><h4>${data.summary.layers.length}</h4><small>Layer</small></div></div>
+    `;
+
+    const textsBody = document.querySelector('#textsTable tbody');
+    textsBody.innerHTML = data.texts.map(t => `<tr><td><span class="badge bg-secondary">${t.tipo}</span></td><td>${t.testo}</td><td>${t.layer}</td><td>${t.posizione_x}</td><td>${t.posizione_y}</td><td>${t.altezza}</td></tr>`).join('');
+
+    const attrsBody = document.querySelector('#attrsTable tbody');
+    attrsBody.innerHTML = data.attributes.map(a => `<tr><td><code>${a.blocco}</code></td><td>${a.layer}</td><td>${a.posizione_x}</td><td>${a.posizione_y}</td><td><strong>${a.attributo_tag}</strong></td><td>${a.attributo_valore}</td></tr>`).join('');
+}
+
+document.getElementById('exportBtn').addEventListener('click', async function() {
+    showSpinner();
+    try {
+        const resp = await fetch('/extract/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texts: extractedData.texts, attributes: extractedData.attributes })
+        });
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'dxf_extraction.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+    } catch(err) { alert('Errore export: ' + err.message); }
+    hideSpinner();
+});
+</script>
+{% endblock %}

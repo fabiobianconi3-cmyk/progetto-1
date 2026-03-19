@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Verifica P&amp;ID{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-check-circle"></i> Verifica Completezza P&amp;ID</h2>
+
+<div class="card mb-4">
+    <div class="card-header">Carica File DXF</div>
+    <div class="card-body">
+        <form id="verifyForm" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">File DXF del P&amp;ID</label>
+                <input type="file" class="form-control" name="dxf_file" accept=".dxf" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Avvia Verifica
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Regole di Verifica</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6><i class="bi bi-gear-fill text-primary"></i> Pompe (PMP)</h6>
+                <ul class="small">
+                    <li>Linea di aspirazione collegata</li>
+                    <li>Linea di mandata collegata</li>
+                    <li>Indicatore pressione PI associato</li>
+                    <li>PI deve avere attributo SCALA</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-bucket-fill text-primary"></i> Serbatoi (TK)</h6>
+                <ul class="small">
+                    <li>Almeno un trasmettitore di livello (LT)</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6><i class="bi bi-speedometer text-primary"></i> Manometri (PI)</h6>
+                <ul class="small">
+                    <li>Attributo SCALA obbligatorio nel blocco</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results -->
+<div id="results" class="d-none">
+    <div class="card mb-4">
+        <div class="card-header">Riepilogo</div>
+        <div class="card-body">
+            <div class="row text-center" id="summaryRow"></div>
+        </div>
+    </div>
+    <div id="issuesContainer"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('verifyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    showSpinner();
+
+    const formData = new FormData(this);
+    try {
+        const resp = await fetch('/verify/check', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (data.error) {
+            alert(data.error);
+            hideSpinner();
+            return;
+        }
+        showResults(data);
+    } catch(err) {
+        alert('Errore: ' + err.message);
+    }
+    hideSpinner();
+});
+
+function showResults(data) {
+    document.getElementById('results').classList.remove('d-none');
+    const s = data.summary;
+    const statusClass = s.status === 'OK' ? 'bg-success' : 'bg-danger';
+
+    document.getElementById('summaryRow').innerHTML = `
+        <div class="col"><div class="p-3 border rounded"><h4>${s.total_blocks}</h4><small>Blocchi Totali</small></div></div>
+        <div class="col"><div class="p-3 border rounded"><h4>${s.pumps_found}</h4><small>Pompe</small></div></div>
+        <div class="col"><div class="p-3 border rounded"><h4>${s.tanks_found}</h4><small>Serbatoi</small></div></div>
+        <div class="col"><div class="p-3 border rounded"><h4>${s.pi_found}</h4><small>Manometri PI</small></div></div>
+        <div class="col"><div class="p-3 border rounded"><span class="badge ${statusClass} fs-6">${s.status}</span><br><small>${s.total_issues} problemi</small></div></div>
+    `;
+
+    const container = document.getElementById('issuesContainer');
+    if (data.issues.length === 0) {
+        container.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle-fill"></i> Nessun problema rilevato. Il P&amp;ID risulta completo.</div>';
+    } else {
+        let html = '<div class="card"><div class="card-header bg-danger text-white">Problemi Rilevati</div><div class="card-body"><table class="table table-striped"><thead><tr><th>Equipment</th><th>Tipo</th><th>Problema</th></tr></thead><tbody>';
+        for (const issue of data.issues) {
+            for (const prob of issue.issues) {
+                html += `<tr><td><code>${issue.equipment}</code></td><td>${issue.type}</td><td class="text-danger">${prob}</td></tr>`;
+            }
+        }
+        html += '</tbody></table></div></div>';
+        container.innerHTML = html;
+    }
+}
+</script>
+{% endblock %}

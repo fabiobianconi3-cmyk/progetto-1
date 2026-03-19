@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Importa Tag{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-upload"></i> Importa Tag da Excel in DXF</h2>
+
+<div class="card mb-4">
+    <div class="card-header">Carica File</div>
+    <div class="card-body">
+        <form id="importForm" enctype="multipart/form-data">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">File DXF originale</label>
+                    <input type="file" class="form-control" name="dxf_file" accept=".dxf" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">File Excel con tag aggiornati</label>
+                    <input type="file" class="form-control" name="excel_file" accept=".xlsx,.xls" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">
+                <i class="bi bi-arrow-repeat"></i> Importa e Aggiorna
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">Formato Excel Richiesto</div>
+    <div class="card-body">
+        <p class="mb-2">Il file Excel deve contenere le seguenti colonne:</p>
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+                <thead class="table-dark">
+                    <tr><th>blocco</th><th>attributo_tag</th><th>vecchio_valore (opzionale)</th><th>nuovo_valore</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>PMP_BLOCK</td><td>TAG</td><td>PMP-240001-01</td><td>PMP-240001-02</td></tr>
+                    <tr><td>PI_BLOCK</td><td>SCALA</td><td></td><td>0-10 bar</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="results" class="d-none">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            Risultati Importazione
+            <a id="downloadBtn" class="btn btn-sm btn-success" href="#">
+                <i class="bi bi-download"></i> Scarica DXF Aggiornato
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row text-center mb-3" id="summaryRow"></div>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped" id="resultsTable">
+                    <thead><tr><th>Blocco</th><th>Attributo</th><th>Vecchio Valore</th><th>Nuovo Valore</th><th>Stato</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('importForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    showSpinner();
+
+    const formData = new FormData(this);
+    try {
+        const resp = await fetch('/import/update', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (data.error) { alert(data.error); hideSpinner(); return; }
+        showResults(data);
+    } catch(err) { alert('Errore: ' + err.message); }
+    hideSpinner();
+});
+
+function showResults(data) {
+    document.getElementById('results').classList.remove('d-none');
+    const s = data.summary;
+
+    document.getElementById('summaryRow').innerHTML = `
+        <div class="col"><div class="p-3 border rounded"><h4>${s.total}</h4><small>Totale Operazioni</small></div></div>
+        <div class="col"><div class="p-3 border rounded text-success"><h4>${s.updated}</h4><small>Aggiornati</small></div></div>
+        <div class="col"><div class="p-3 border rounded text-danger"><h4>${s.not_found}</h4><small>Non Trovati</small></div></div>
+    `;
+
+    document.getElementById('downloadBtn').href = '/import/download/' + data.download_filename;
+
+    const tbody = document.querySelector('#resultsTable tbody');
+    tbody.innerHTML = data.results.map(r => {
+        const cls = r.stato === 'Aggiornato' ? 'table-success' : 'table-warning';
+        const badge = r.stato === 'Aggiornato'
+            ? '<span class="badge bg-success">Aggiornato</span>'
+            : '<span class="badge bg-warning">Non trovato</span>';
+        return `<tr class="${cls}"><td><code>${r.blocco}</code></td><td>${r.attributo}</td><td>${r.vecchio_valore}</td><td><strong>${r.nuovo_valore}</strong></td><td>${badge}</td></tr>`;
+    }).join('');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="display-5 fw-bold" style="color: var(--lundbeck-blue);">P&amp;ID Management Tool</h1>
+    <p class="lead text-muted">Gestione tag e verifica P&amp;ID secondo SOP Lundbeck</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card module-card h-100">
+            <div class="card-body text-center p-4">
+                <i class="bi bi-tag-fill display-3" style="color: var(--lundbeck-blue);"></i>
+                <h5 class="card-title mt-3">Genera Tag SOP</h5>
+                <p class="card-text text-muted">Genera e valida tag per equipment, linee e strumenti secondo le convenzioni SOP.</p>
+                <a href="/tags" class="btn btn-primary">Apri Modulo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card module-card h-100">
+            <div class="card-body text-center p-4">
+                <i class="bi bi-check-circle-fill display-3" style="color: var(--lundbeck-blue);"></i>
+                <h5 class="card-title mt-3">Verifica P&amp;ID</h5>
+                <p class="card-text text-muted">Controlla completezza: pompe con aspirazione/mandata/PI, serbatoi con LT.</p>
+                <a href="/verify" class="btn btn-primary">Apri Modulo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card module-card h-100">
+            <div class="card-body text-center p-4">
+                <i class="bi bi-file-earmark-text-fill display-3" style="color: var(--lundbeck-blue);"></i>
+                <h5 class="card-title mt-3">Estrai da DXF</h5>
+                <p class="card-text text-muted">Estrai testi e attributi blocchi da file DXF ed esporta in Excel.</p>
+                <a href="/extract" class="btn btn-primary">Apri Modulo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+        <div class="card module-card h-100">
+            <div class="card-body text-center p-4">
+                <i class="bi bi-upload display-3" style="color: var(--lundbeck-blue);"></i>
+                <h5 class="card-title mt-3">Importa Tag</h5>
+                <p class="card-text text-muted">Importa tag aggiornati da Excel e applicali al file DXF.</p>
+                <a href="/import" class="btn btn-primary">Apri Modulo</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-5">
+    <div class="card-header"><i class="bi bi-info-circle"></i> Formato Tag SOP Lundbeck</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6>Equipment</h6>
+                <code>AAA-YYBBBB-XX</code>
+                <ul class="small text-muted mt-1">
+                    <li>AAA = Tipo (PMP, TK, HX...)</li>
+                    <li>YY = Anno/Area</li>
+                    <li>BBBB = Numero sequenza</li>
+                    <li>XX = Suffisso</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6>Linee</h6>
+                <code>AAAA-BB-C-DDDDDD-EEE-FF</code>
+                <ul class="small text-muted mt-1">
+                    <li>AAAA = Area</li>
+                    <li>BB = Diametro</li>
+                    <li>C = Classe specifica</li>
+                    <li>DDDDDD = Servizio fluido</li>
+                    <li>EEE = Isolamento</li>
+                    <li>FF = Sequenza</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6>Strumenti</h6>
+                <code>AAA-BBBBBB-XX</code>
+                <ul class="small text-muted mt-1">
+                    <li>AAA = Funzione (PI, LT, TT...)</li>
+                    <li>BBBBBB = Numero loop</li>
+                    <li>XX = Suffisso</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
