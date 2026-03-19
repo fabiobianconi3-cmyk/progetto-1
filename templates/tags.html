@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}Genera Tag SOP{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-tag"></i> Genera Tag SOP</h2>
+
+<ul class="nav nav-tabs mb-4" id="tagTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="eq-tab" data-bs-toggle="tab" data-bs-target="#eq-pane" type="button">Equipment</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="line-tab" data-bs-toggle="tab" data-bs-target="#line-pane" type="button">Linee</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="inst-tab" data-bs-toggle="tab" data-bs-target="#inst-pane" type="button">Strumenti</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="val-tab" data-bs-toggle="tab" data-bs-target="#val-pane" type="button">Valida Tag</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="tagTabContent">
+    <!-- Equipment Tab -->
+    <div class="tab-pane fade show active" id="eq-pane" role="tabpanel">
+        <div class="card">
+            <div class="card-header">Equipment &mdash; AAA-YYBBBB-XX</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo Equipment (AAA)</label>
+                        <select class="form-select" id="eq_type">
+                            {% for code, desc in equipment_types.items() %}
+                            <option value="{{ code }}">{{ code }} - {{ desc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Area/Anno (YY)</label>
+                        <input type="text" class="form-control" id="area_year" placeholder="24" maxlength="4">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Numero Sequenza (BBBB)</label>
+                        <input type="text" class="form-control" id="seq_number" placeholder="0001" maxlength="4">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Suffisso (XX)</label>
+                        <input type="text" class="form-control" id="eq_suffix" value="01" maxlength="2">
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="generateTag('equipment')">
+                    <i class="bi bi-lightning"></i> Genera Tag
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lines Tab -->
+    <div class="tab-pane fade" id="line-pane" role="tabpanel">
+        <div class="card">
+            <div class="card-header">Linee &mdash; AAAA-BB-C-DDDDDD-EEE-FF</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <label class="form-label">Area (AAAA)</label>
+                        <input type="text" class="form-control" id="line_area" placeholder="1000" maxlength="4">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Diametro (BB)</label>
+                        <input type="text" class="form-control" id="line_diameter" placeholder="02" maxlength="2">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Classe (C)</label>
+                        <select class="form-select" id="line_spec">
+                            {% for code, desc in spec_classes.items() %}
+                            <option value="{{ code }}">{{ code }} - {{ desc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Servizio (DDDDDD)</label>
+                        <select class="form-select" id="line_service">
+                            {% for code, desc in fluid_services.items() %}
+                            <option value="{{ code }}">{{ code }} - {{ desc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Isolamento (EEE)</label>
+                        <input type="text" class="form-control" id="line_insulation" placeholder="NIS" maxlength="3">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Sequenza (FF)</label>
+                        <input type="text" class="form-control" id="line_sequence" placeholder="01" maxlength="2">
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="generateTag('line')">
+                    <i class="bi bi-lightning"></i> Genera Tag
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instruments Tab -->
+    <div class="tab-pane fade" id="inst-pane" role="tabpanel">
+        <div class="card">
+            <div class="card-header">Strumenti &mdash; AAA-BBBBBB-XX</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo Strumento (AAA)</label>
+                        <select class="form-select" id="inst_type">
+                            {% for code, desc in instrument_types.items() %}
+                            <option value="{{ code }}">{{ code }} - {{ desc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Numero Loop (BBBBBB)</label>
+                        <input type="text" class="form-control" id="loop_number" placeholder="001001" maxlength="6">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Suffisso (XX)</label>
+                        <input type="text" class="form-control" id="inst_suffix" value="01" maxlength="2">
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="generateTag('instrument')">
+                    <i class="bi bi-lightning"></i> Genera Tag
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Validate Tab -->
+    <div class="tab-pane fade" id="val-pane" role="tabpanel">
+        <div class="card">
+            <div class="card-header">Valida Tag Esistente</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" id="val_category">
+                            <option value="equipment">Equipment</option>
+                            <option value="line">Linea</option>
+                            <option value="instrument">Strumento</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Tag da validare</label>
+                        <input type="text" class="form-control" id="val_tag" placeholder="PMP-240001-01">
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="validateTag()">
+                    <i class="bi bi-check-lg"></i> Valida
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Result -->
+<div class="card mt-4 d-none" id="resultCard">
+    <div class="card-header">Risultato</div>
+    <div class="card-body text-center">
+        <div id="tagResult" class="tag-result mb-2"></div>
+        <div id="tagStatus"></div>
+        <div id="tagDetails" class="mt-2 small text-muted"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function generateTag(category) {
+    let data = { category };
+
+    if (category === 'equipment') {
+        data.eq_type = document.getElementById('eq_type').value;
+        data.area_year = document.getElementById('area_year').value;
+        data.seq_number = document.getElementById('seq_number').value;
+        data.suffix = document.getElementById('eq_suffix').value;
+    } else if (category === 'line') {
+        data.area = document.getElementById('line_area').value;
+        data.diameter = document.getElementById('line_diameter').value;
+        data.spec_class = document.getElementById('line_spec').value;
+        data.service = document.getElementById('line_service').value;
+        data.insulation = document.getElementById('line_insulation').value.toUpperCase();
+        data.sequence = document.getElementById('line_sequence').value;
+    } else if (category === 'instrument') {
+        data.inst_type = document.getElementById('inst_type').value;
+        data.loop_number = document.getElementById('loop_number').value;
+        data.suffix = document.getElementById('inst_suffix').value;
+    }
+
+    const resp = await fetch('/tags/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    const result = await resp.json();
+    showResult(result.tag, result.validation);
+}
+
+async function validateTag() {
+    const data = {
+        tag: document.getElementById('val_tag').value,
+        category: document.getElementById('val_category').value
+    };
+    const resp = await fetch('/tags/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    const result = await resp.json();
+    showResult(result.tag, result);
+}
+
+function showResult(tag, validation) {
+    const card = document.getElementById('resultCard');
+    card.classList.remove('d-none');
+    document.getElementById('tagResult').textContent = tag;
+
+    const statusEl = document.getElementById('tagStatus');
+    if (validation.valid) {
+        statusEl.innerHTML = '<span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> Tag Valido</span>';
+    } else {
+        statusEl.innerHTML = `<span class="badge bg-danger fs-6"><i class="bi bi-x-circle"></i> Non Valido</span><br><small class="text-danger">${validation.error}</small>`;
+    }
+
+    const details = document.getElementById('tagDetails');
+    const skip = ['valid', 'error', 'tag'];
+    const parts = Object.entries(validation).filter(([k]) => !skip.includes(k)).map(([k, v]) => `<strong>${k}:</strong> ${v}`);
+    details.innerHTML = parts.join(' &bull; ');
+}
+</script>
+{% endblock %}
