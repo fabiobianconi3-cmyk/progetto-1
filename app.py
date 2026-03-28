@@ -18,11 +18,13 @@ from modules.tag_generator import tag_bp
 from modules.pid_verifier import verifier_bp
 from modules.dxf_extractor import extractor_bp
 from modules.dxf_importer import importer_bp
+from modules.routes_fluidi import fluidi_bp
 
 app.register_blueprint(tag_bp, url_prefix="/tags")
 app.register_blueprint(verifier_bp, url_prefix="/verify")
 app.register_blueprint(extractor_bp, url_prefix="/extract")
 app.register_blueprint(importer_bp, url_prefix="/import")
+app.register_blueprint(fluidi_bp, url_prefix="/fluidi")
 
 
 @app.route("/")

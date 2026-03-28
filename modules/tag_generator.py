@@ -6,6 +6,8 @@ Generates tags following Lundbeck SOP naming conventions:
   Instruments: AAA-BBBBBB-XX
 """
 
+import json
+import os
 import re
 from flask import Blueprint, render_template, request, jsonify
 
@@ -53,16 +55,27 @@ LINE_SPEC_CLASSES = {
     "F": "Vetro",
 }
 
-LINE_FLUID_SERVICES = {
-    "WFI": "Water for Injection",
-    "PW": "Purified Water",
-    "CIP": "Clean In Place",
-    "SIP": "Steam In Place",
-    "N2": "Azoto",
-    "CA": "Compressed Air",
-    "PROD": "Prodotto",
-    "WFI-R": "WFI Return",
+_FLUID_LIST_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "rules", "fluid_list.json")
+
+_FALLBACK_FLUID_SERVICES = {
+    "WFI": "Acqua per iniettabili",
+    "PW": "Acqua purificata circuito secondario",
+    "CIPS": "Cleaning in place (mandata)",
+    "CIPR": "Cleaning in place (ritorno)",
+    "N": "Azoto",
+    "CA": "Aria compressa",
+    "P": "Linea di processo generica",
 }
+
+
+def load_fluid_services() -> dict:
+    """Load fluid services from rules/fluid_list.json, returning {codice: descrizione}."""
+    try:
+        with open(_FLUID_LIST_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        return {fluid["codice"]: fluid["descrizione"] for fluid in data.get("fluidi", [])}
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        return dict(_FALLBACK_FLUID_SERVICES)
 
 
 def validate_equipment_tag(tag: str) -> dict:
@@ -119,7 +132,7 @@ def tag_page():
         equipment_types=EQUIPMENT_TYPES,
         instrument_types=INSTRUMENT_TYPES,
         spec_classes=LINE_SPEC_CLASSES,
-        fluid_services=LINE_FLUID_SERVICES,
+        fluid_services=load_fluid_services(),
     )
 
 
