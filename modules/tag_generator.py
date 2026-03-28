@@ -13,18 +13,20 @@ from flask import Blueprint, render_template, request, jsonify
 
 tag_bp = Blueprint("tags", __name__)
 
-# --- Equipment tag: AAA-YYBBBB-XX ---
+# --- Equipment types for SOP wizard ---
 EQUIPMENT_TYPES = {
-    "PMP": "Pompa",
-    "TK": "Serbatoio",
-    "HX": "Scambiatore di calore",
-    "AGT": "Agitatore",
-    "FLT": "Filtro",
-    "VLV": "Valvola",
-    "CMP": "Compressore",
-    "DRY": "Essiccatore",
-    "REA": "Reattore",
-    "COL": "Colonna",
+    "G":  {"nome": "Pompa",                "icona": "bi-water"},
+    "PB": {"nome": "Chiller",              "icona": "bi-snow2"},
+    "SI": {"nome": "Serbatoio Inox 316L",  "icona": "bi-bucket"},
+    "SJ": {"nome": "Serbatoio Inox 304L",  "icona": "bi-bucket-fill"},
+    "EI": {"nome": "Scambiatore",          "icona": "bi-arrow-left-right"},
+    "RI": {"nome": "Reattore",             "icona": "bi-radioactive"},
+    "F":  {"nome": "Filtro",               "icona": "bi-funnel"},
+    "PO": {"nome": "Compressore",          "icona": "bi-fan"},
+    "VP": {"nome": "Pompa vuoto",          "icona": "bi-wind"},
+    "AU": {"nome": "Scrubber",             "icona": "bi-cloud-haze2"},
+    "CT": {"nome": "Torre evaporativa",    "icona": "bi-building"},
+    "GV": {"nome": "Generatore vapore",    "icona": "bi-thermometer-high"},
 }
 
 # --- Instrument types ---
@@ -125,6 +127,16 @@ def generate_instrument_tag(inst_type: str, loop_number: str, suffix: str) -> st
     return f"{inst_type}-{loop_number}-{suffix}"
 
 
+def load_fluid_list() -> list:
+    """Load full fluid list from rules/fluid_list.json."""
+    try:
+        with open(_FLUID_LIST_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("fluidi", [])
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        return []
+
+
 @tag_bp.route("/")
 def tag_page():
     return render_template(
@@ -133,6 +145,7 @@ def tag_page():
         instrument_types=INSTRUMENT_TYPES,
         spec_classes=LINE_SPEC_CLASSES,
         fluid_services=load_fluid_services(),
+        fluid_list_json=json.dumps(load_fluid_list(), ensure_ascii=False),
     )
 
 

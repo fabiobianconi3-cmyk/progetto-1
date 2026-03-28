@@ -1,234 +1,382 @@
 {% extends "base.html" %}
 {% block title %}Genera Tag SOP{% endblock %}
+
+{% block extra_css %}
+<style>
+  .eq-card {
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    border: 2px solid transparent;
+    min-height: 120px;
+  }
+  .eq-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+  .eq-card.selected { border-color: var(--lundbeck-blue); background: var(--lundbeck-light, #e8f0fe); }
+  .eq-card .bi { font-size: 2rem; color: var(--lundbeck-blue); }
+  .step-panel { display: none; }
+  .step-panel.active { display: block; }
+  .progress-step { width: 2.2rem; height: 2.2rem; border-radius: 50%; display: inline-flex;
+    align-items: center; justify-content: center; font-weight: 700; font-size: .85rem;
+    border: 2px solid #dee2e6; color: #6c757d; background: #fff; }
+  .progress-step.done { background: var(--lundbeck-blue); color: #fff; border-color: var(--lundbeck-blue); }
+  .progress-step.current { border-color: var(--lundbeck-blue); color: var(--lundbeck-blue); }
+  .progress-bar-line { flex: 1; height: 2px; background: #dee2e6; margin: 0 .35rem; align-self: center; }
+  .progress-bar-line.done { background: var(--lundbeck-blue); }
+  .tag-big { font-family: 'Courier New', monospace; font-size: 2.2rem; font-weight: 800;
+    color: var(--lundbeck-blue); letter-spacing: 2px; }
+  .seq-btn { width: 60px; height: 50px; font-size: 1.1rem; font-weight: 600; }
+  .seq-btn.selected { background: var(--lundbeck-blue) !important; border-color: var(--lundbeck-blue) !important; color: #fff !important; }
+  .field-explain { font-size: .85rem; }
+  .field-explain strong { color: var(--lundbeck-blue); }
+  .copy-ok { display: none; color: #198754; font-weight: 600; }
+</style>
+{% endblock %}
+
 {% block content %}
 <h2 class="mb-4"><i class="bi bi-tag"></i> Genera Tag SOP</h2>
 
-<ul class="nav nav-tabs mb-4" id="tagTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="eq-tab" data-bs-toggle="tab" data-bs-target="#eq-pane" type="button">Equipment</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="line-tab" data-bs-toggle="tab" data-bs-target="#line-pane" type="button">Linee</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="inst-tab" data-bs-toggle="tab" data-bs-target="#inst-pane" type="button">Strumenti</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="val-tab" data-bs-toggle="tab" data-bs-target="#val-pane" type="button">Valida Tag</button>
-    </li>
-</ul>
+<!-- Progress bar -->
+<div class="d-flex align-items-center mb-4 px-2" id="progressBar"></div>
 
-<div class="tab-content" id="tagTabContent">
-    <!-- Equipment Tab -->
-    <div class="tab-pane fade show active" id="eq-pane" role="tabpanel">
-        <div class="card">
-            <div class="card-header">Equipment &mdash; AAA-YYBBBB-XX</div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Tipo Equipment (AAA)</label>
-                        <select class="form-select" id="eq_type">
-                            {% for code, desc in equipment_types.items() %}
-                            <option value="{{ code }}">{{ code }} - {{ desc }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Area/Anno (YY)</label>
-                        <input type="text" class="form-control" id="area_year" placeholder="24" maxlength="4">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Numero Sequenza (BBBB)</label>
-                        <input type="text" class="form-control" id="seq_number" placeholder="0001" maxlength="4">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Suffisso (XX)</label>
-                        <input type="text" class="form-control" id="eq_suffix" value="01" maxlength="2">
-                    </div>
-                </div>
-                <button class="btn btn-primary mt-3" onclick="generateTag('equipment')">
-                    <i class="bi bi-lightning"></i> Genera Tag
-                </button>
-            </div>
+<!-- ==================== STEP 1 — Tipo equipment ==================== -->
+<div class="step-panel active" id="step1">
+  <div class="card">
+    <div class="card-header"><strong>Step 1</strong> &mdash; Seleziona il tipo di equipment</div>
+    <div class="card-body">
+      <div class="row g-3" id="eqGrid">
+        {% for code, info in equipment_types.items() %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="card eq-card text-center p-3" data-eq="{{ code }}" onclick="selectEquipment(this, '{{ code }}')">
+            <i class="bi {{ info.icona }} d-block mb-2"></i>
+            <div class="fw-bold">{{ code }}</div>
+            <small class="text-muted">{{ info.nome }}</small>
+          </div>
         </div>
+        {% endfor %}
+      </div>
     </div>
-
-    <!-- Lines Tab -->
-    <div class="tab-pane fade" id="line-pane" role="tabpanel">
-        <div class="card">
-            <div class="card-header">Linee &mdash; AAAA-BB-C-DDDDDD-EEE-FF</div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-2">
-                        <label class="form-label">Area (AAAA)</label>
-                        <input type="text" class="form-control" id="line_area" placeholder="1000" maxlength="4">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Diametro (BB)</label>
-                        <input type="text" class="form-control" id="line_diameter" placeholder="02" maxlength="2">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Classe (C)</label>
-                        <select class="form-select" id="line_spec">
-                            {% for code, desc in spec_classes.items() %}
-                            <option value="{{ code }}">{{ code }} - {{ desc }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Servizio (DDDDDD)</label>
-                        <select class="form-select" id="line_service">
-                            {% for code, desc in fluid_services.items() %}
-                            <option value="{{ code }}">{{ code }} - {{ desc }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Isolamento (EEE)</label>
-                        <input type="text" class="form-control" id="line_insulation" placeholder="NIS" maxlength="3">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Sequenza (FF)</label>
-                        <input type="text" class="form-control" id="line_sequence" placeholder="01" maxlength="2">
-                    </div>
-                </div>
-                <button class="btn btn-primary mt-3" onclick="generateTag('line')">
-                    <i class="bi bi-lightning"></i> Genera Tag
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Instruments Tab -->
-    <div class="tab-pane fade" id="inst-pane" role="tabpanel">
-        <div class="card">
-            <div class="card-header">Strumenti &mdash; AAA-BBBBBB-XX</div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Tipo Strumento (AAA)</label>
-                        <select class="form-select" id="inst_type">
-                            {% for code, desc in instrument_types.items() %}
-                            <option value="{{ code }}">{{ code }} - {{ desc }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Numero Loop (BBBBBB)</label>
-                        <input type="text" class="form-control" id="loop_number" placeholder="001001" maxlength="6">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Suffisso (XX)</label>
-                        <input type="text" class="form-control" id="inst_suffix" value="01" maxlength="2">
-                    </div>
-                </div>
-                <button class="btn btn-primary mt-3" onclick="generateTag('instrument')">
-                    <i class="bi bi-lightning"></i> Genera Tag
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Validate Tab -->
-    <div class="tab-pane fade" id="val-pane" role="tabpanel">
-        <div class="card">
-            <div class="card-header">Valida Tag Esistente</div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Categoria</label>
-                        <select class="form-select" id="val_category">
-                            <option value="equipment">Equipment</option>
-                            <option value="line">Linea</option>
-                            <option value="instrument">Strumento</option>
-                        </select>
-                    </div>
-                    <div class="col-md-8">
-                        <label class="form-label">Tag da validare</label>
-                        <input type="text" class="form-control" id="val_tag" placeholder="PMP-240001-01">
-                    </div>
-                </div>
-                <button class="btn btn-primary mt-3" onclick="validateTag()">
-                    <i class="bi bi-check-lg"></i> Valida
-                </button>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
-<!-- Result -->
-<div class="card mt-4 d-none" id="resultCard">
-    <div class="card-header">Risultato</div>
-    <div class="card-body text-center">
-        <div id="tagResult" class="tag-result mb-2"></div>
-        <div id="tagStatus"></div>
-        <div id="tagDetails" class="mt-2 small text-muted"></div>
+<!-- ==================== STEP 2 — Reparto ==================== -->
+<div class="step-panel" id="step2">
+  <div class="card">
+    <div class="card-header"><strong>Step 2</strong> &mdash; In quale reparto si trova l'equipment?</div>
+    <div class="card-body">
+      <p class="text-muted">Inserisci il numero del reparto (2 cifre).</p>
+      <div class="row g-2 mb-3">
+        <div class="col-auto"><span class="badge bg-light text-dark border">26 — Reparto sintesi</span></div>
+        <div class="col-auto"><span class="badge bg-light text-dark border">27 — Reparto purificazione</span></div>
+        <div class="col-auto"><span class="badge bg-light text-dark border">28 — Reparto utilities</span></div>
+        <div class="col-auto"><span class="badge bg-light text-dark border">30 — Reparto confezionamento</span></div>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <input type="text" id="inputReparto" class="form-control form-control-lg text-center"
+                 maxlength="2" pattern="\d{2}" placeholder="es. 26"
+                 oninput="this.value=this.value.replace(/\D/g,'').slice(0,2)">
+        </div>
+      </div>
+      <div class="mt-3">
+        <button class="btn btn-outline-secondary me-2" onclick="goStep(1)"><i class="bi bi-arrow-left"></i> Indietro</button>
+        <button class="btn btn-primary" id="btnStep2Next" onclick="goStep(3)" disabled>Avanti <i class="bi bi-arrow-right"></i></button>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- ==================== STEP 3 — Equipment principale ==================== -->
+<div class="step-panel" id="step3">
+  <div class="card">
+    <div class="card-header"><strong>Step 3</strong> &mdash; A quale equipment principale è associato?</div>
+    <div class="card-body">
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        Indica l'equipment principale dell'unità funzionale.<br>
+        <strong>Esempio:</strong> se la pompa serve il serbatoio S261, scrivi <code>S261</code>.
+        Se serve il chiller PB01, scrivi <code>PB01</code>.
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <input type="text" id="inputUF" class="form-control form-control-lg text-center text-uppercase"
+                 placeholder="es. S261" maxlength="10"
+                 oninput="this.value=this.value.toUpperCase()">
+        </div>
+      </div>
+      <div class="mt-3">
+        <button class="btn btn-outline-secondary me-2" onclick="goStep(2)"><i class="bi bi-arrow-left"></i> Indietro</button>
+        <button class="btn btn-primary" id="btnStep3Next" onclick="goStep(4)" disabled>Avanti <i class="bi bi-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== STEP 4 — Progressivo ==================== -->
+<div class="step-panel" id="step4">
+  <div class="card">
+    <div class="card-header"><strong>Step 4</strong> &mdash; Numero progressivo</div>
+    <div class="card-body">
+      <p>È il primo, secondo o terzo equipment di questo tipo nell'unità?</p>
+      <div class="d-flex gap-2 flex-wrap" id="seqButtons">
+        <button class="btn btn-outline-primary seq-btn" onclick="selectSeq(this,'01')">01</button>
+        <button class="btn btn-outline-primary seq-btn" onclick="selectSeq(this,'02')">02</button>
+        <button class="btn btn-outline-primary seq-btn" onclick="selectSeq(this,'03')">03</button>
+        <button class="btn btn-outline-primary seq-btn" onclick="selectSeq(this,'04')">04</button>
+        <button class="btn btn-outline-primary seq-btn" onclick="selectSeq(this,'05')">05</button>
+      </div>
+      <div class="mt-3">
+        <button class="btn btn-outline-secondary me-2" onclick="goStep(3)"><i class="bi bi-arrow-left"></i> Indietro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== STEP 5 — Riepilogo ==================== -->
+<div class="step-panel" id="step5">
+  <div class="card">
+    <div class="card-header"><strong>Step 5</strong> &mdash; Riepilogo e conferma</div>
+    <div class="card-body text-center">
+      <div class="mb-3">
+        <span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> Tag generato</span>
+      </div>
+      <div class="tag-big mb-4" id="finalTag"></div>
+
+      <div class="text-start mx-auto" style="max-width:500px">
+        <table class="table table-sm field-explain">
+          <tbody id="tagExplain"></tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-center gap-3 mt-4">
+        <button class="btn btn-outline-secondary" onclick="goStep(4)"><i class="bi bi-arrow-left"></i> Indietro</button>
+        <button class="btn btn-primary" onclick="copyTag()"><i class="bi bi-clipboard"></i> Copia tag</button>
+        <span class="copy-ok" id="copyOk"><i class="bi bi-check-lg"></i> Copiato!</span>
+        <button class="btn btn-outline-primary" onclick="goStep(6)"><i class="bi bi-diagram-3"></i> Genera linee associate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== STEP 6 — Linee associate ==================== -->
+<div class="step-panel" id="step6">
+  <div class="card">
+    <div class="card-header"><strong>Step 6</strong> &mdash; Genera linee e strumenti associati</div>
+    <div class="card-body">
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Fluido principale</label>
+          <select class="form-select" id="selFluido">
+            <option value="">— Seleziona fluido —</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-bold">DN aspirazione</label>
+          <input type="text" id="inputDnAsp" class="form-control" placeholder="es. 50" maxlength="4"
+                 oninput="this.value=this.value.replace(/\D/g,'')">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-bold">DN mandata</label>
+          <input type="text" id="inputDnMan" class="form-control" placeholder="es. 40" maxlength="4"
+                 oninput="this.value=this.value.replace(/\D/g,'')">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <button class="btn btn-primary w-100" id="btnGenLines" onclick="generateLines()" disabled>
+            <i class="bi bi-lightning"></i> Genera
+          </button>
+        </div>
+      </div>
+
+      <div id="linesResult" class="d-none">
+        <h5 class="mb-3">Tag generati</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle" id="linesTable">
+            <thead class="table-dark">
+              <tr><th>Tipo</th><th>Tag</th><th>Note</th></tr>
+            </thead>
+            <tbody id="linesBody"></tbody>
+          </table>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-outline-primary" onclick="copyLinesTable()"><i class="bi bi-clipboard"></i> Copia tabella</button>
+          <button class="btn btn-outline-success" onclick="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Esporta Excel</button>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <button class="btn btn-outline-secondary" onclick="goStep(5)"><i class="bi bi-arrow-left"></i> Indietro</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-async function generateTag(category) {
-    let data = { category };
+// ── State ──
+const state = { eqType: '', reparto: '', uf: '', seq: '', totalSteps: 5 };
+const eqTypes = {{ equipment_types | tojson }};
+const fluidList = {{ fluid_list_json | safe }};
 
-    if (category === 'equipment') {
-        data.eq_type = document.getElementById('eq_type').value;
-        data.area_year = document.getElementById('area_year').value;
-        data.seq_number = document.getElementById('seq_number').value;
-        data.suffix = document.getElementById('eq_suffix').value;
-    } else if (category === 'line') {
-        data.area = document.getElementById('line_area').value;
-        data.diameter = document.getElementById('line_diameter').value;
-        data.spec_class = document.getElementById('line_spec').value;
-        data.service = document.getElementById('line_service').value;
-        data.insulation = document.getElementById('line_insulation').value.toUpperCase();
-        data.sequence = document.getElementById('line_sequence').value;
-    } else if (category === 'instrument') {
-        data.inst_type = document.getElementById('inst_type').value;
-        data.loop_number = document.getElementById('loop_number').value;
-        data.suffix = document.getElementById('inst_suffix').value;
-    }
+// ── Progress bar ──
+function renderProgress(current) {
+  const total = current >= 6 ? 6 : state.totalSteps;
+  const bar = document.getElementById('progressBar');
+  let html = '';
+  for (let i = 1; i <= total; i++) {
+    const cls = i < current ? 'done' : i === current ? 'current' : '';
+    html += `<span class="progress-step ${cls}">${i}</span>`;
+    if (i < total) html += `<span class="progress-bar-line ${i < current ? 'done' : ''}"></span>`;
+  }
+  bar.innerHTML = html;
+}
 
-    const resp = await fetch('/tags/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+// ── Navigation ──
+function goStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  renderProgress(n);
+  if (n === 5) buildSummary();
+  if (n === 6) populateFluidDropdown();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Step 1 — Equipment ──
+function selectEquipment(el, code) {
+  document.querySelectorAll('.eq-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.eqType = code;
+  setTimeout(() => goStep(2), 200);
+}
+
+// ── Step 2 — Reparto ──
+document.getElementById('inputReparto').addEventListener('input', function() {
+  document.getElementById('btnStep2Next').disabled = this.value.length < 2;
+  state.reparto = this.value;
+});
+
+// ── Step 3 — UF ──
+document.getElementById('inputUF').addEventListener('input', function() {
+  document.getElementById('btnStep3Next').disabled = this.value.trim().length === 0;
+  state.uf = this.value.trim().toUpperCase();
+});
+
+// ── Step 4 — Progressivo ──
+function selectSeq(el, val) {
+  document.querySelectorAll('.seq-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  state.seq = val;
+  setTimeout(() => goStep(5), 200);
+}
+
+// ── Step 5 — Riepilogo ──
+function buildTag() {
+  return `${state.eqType}-${state.reparto}${state.uf}-${state.seq}`;
+}
+
+function buildSummary() {
+  const tag = buildTag();
+  document.getElementById('finalTag').textContent = tag;
+
+  const info = eqTypes[state.eqType] || {};
+  const rows = [
+    [`<strong>${state.eqType}</strong>`, info.nome || state.eqType],
+    [`<strong>${state.reparto}</strong>`, `Reparto ${state.reparto}`],
+    [`<strong>${state.uf}</strong>`, `Unità funzionale ${state.uf}`],
+    [`<strong>${state.seq}</strong>`, state.seq === '01' ? 'Primo equipment di questo tipo' :
+      `Equipment n.${parseInt(state.seq)} di questo tipo`],
+  ];
+  document.getElementById('tagExplain').innerHTML = rows.map(
+    r => `<tr><td class="text-center" style="width:100px">${r[0]}</td><td>${r[1]}</td></tr>`
+  ).join('');
+}
+
+function copyTag() {
+  navigator.clipboard.writeText(buildTag());
+  const ok = document.getElementById('copyOk');
+  ok.style.display = 'inline';
+  setTimeout(() => ok.style.display = 'none', 2000);
+}
+
+// ── Step 6 — Linee associate ──
+function populateFluidDropdown() {
+  const sel = document.getElementById('selFluido');
+  if (sel.options.length > 1) return;
+  const grouped = {};
+  fluidList.forEach(f => {
+    if (!grouped[f.categoria]) grouped[f.categoria] = [];
+    grouped[f.categoria].push(f);
+  });
+  Object.keys(grouped).sort().forEach(cat => {
+    const og = document.createElement('optgroup');
+    og.label = cat;
+    grouped[cat].forEach(f => {
+      const o = document.createElement('option');
+      o.value = f.codice;
+      o.textContent = `${f.codice} — ${f.descrizione}`;
+      o.dataset.materiale = f.materiale || '';
+      o.dataset.coibentazione = f.coibentazione || '';
+      og.appendChild(o);
     });
-    const result = await resp.json();
-    showResult(result.tag, result.validation);
+    sel.appendChild(og);
+  });
 }
 
-async function validateTag() {
-    const data = {
-        tag: document.getElementById('val_tag').value,
-        category: document.getElementById('val_category').value
-    };
-    const resp = await fetch('/tags/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    const result = await resp.json();
-    showResult(result.tag, result);
+function enableGenLines() {
+  const ok = document.getElementById('selFluido').value &&
+             document.getElementById('inputDnAsp').value &&
+             document.getElementById('inputDnMan').value;
+  document.getElementById('btnGenLines').disabled = !ok;
+}
+document.getElementById('selFluido').addEventListener('change', enableGenLines);
+document.getElementById('inputDnAsp').addEventListener('input', enableGenLines);
+document.getElementById('inputDnMan').addEventListener('input', enableGenLines);
+
+let generatedLines = [];
+
+function generateLines() {
+  const sel = document.getElementById('selFluido');
+  const opt = sel.options[sel.selectedIndex];
+  const fluido = sel.value;
+  const mat = opt.dataset.materiale || '';
+  const coib = opt.dataset.coibentazione || '';
+  const dnAsp = document.getElementById('inputDnAsp').value.padStart(2, '0');
+  const dnMan = document.getElementById('inputDnMan').value.padStart(2, '0');
+  const uf = state.uf;
+
+  generatedLines = [
+    { tipo: 'Linea aspirazione', tag: `${dnAsp}-${fluido}-${mat}-${uf}-001-${coib || 'NIS'}`, note: '' },
+    { tipo: 'Linea mandata',     tag: `${dnMan}-${fluido}-${mat}-${uf}-002-${coib || 'NIS'}`, note: '' },
+    { tipo: 'PI manometro',      tag: `PI-${uf}-01`,   note: 'Ricorda di aggiungere la SCALA nel blocco AutoCAD' },
+    { tipo: 'FIT portata',       tag: `FIT-${uf}-01`,  note: '' },
+  ];
+
+  document.getElementById('linesBody').innerHTML = generatedLines.map(l =>
+    `<tr>
+      <td>${l.tipo}</td>
+      <td><code class="fs-6">${l.tag}</code></td>
+      <td>${l.note ? '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> ' + l.note + '</span>' : '—'}</td>
+    </tr>`
+  ).join('');
+  document.getElementById('linesResult').classList.remove('d-none');
 }
 
-function showResult(tag, validation) {
-    const card = document.getElementById('resultCard');
-    card.classList.remove('d-none');
-    document.getElementById('tagResult').textContent = tag;
-
-    const statusEl = document.getElementById('tagStatus');
-    if (validation.valid) {
-        statusEl.innerHTML = '<span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> Tag Valido</span>';
-    } else {
-        statusEl.innerHTML = `<span class="badge bg-danger fs-6"><i class="bi bi-x-circle"></i> Non Valido</span><br><small class="text-danger">${validation.error}</small>`;
-    }
-
-    const details = document.getElementById('tagDetails');
-    const skip = ['valid', 'error', 'tag'];
-    const parts = Object.entries(validation).filter(([k]) => !skip.includes(k)).map(([k, v]) => `<strong>${k}:</strong> ${v}`);
-    details.innerHTML = parts.join(' &bull; ');
+function copyLinesTable() {
+  const text = generatedLines.map(l => `${l.tipo}\t${l.tag}\t${l.note}`).join('\n');
+  navigator.clipboard.writeText(text);
 }
+
+function exportExcel() {
+  const header = 'Tipo\tTag\tNote\n';
+  const rows = generatedLines.map(l => `${l.tipo}\t${l.tag}\t${l.note}`).join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + header + rows], { type: 'text/tab-separated-values;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `tag_linee_${state.eqType}-${state.reparto}${state.uf}.xls`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── Init ──
+renderProgress(1);
 </script>
 {% endblock %}
