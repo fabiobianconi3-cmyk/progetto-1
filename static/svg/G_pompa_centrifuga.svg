@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Corpo pompa: cerchio -->
+  <circle cx="32" cy="32" r="18"/>
+  <!-- Triangolo di mandata -->
+  <polygon points="50,32 38,22 38,42" fill="currentColor" stroke="none"/>
+  <!-- Bocchello aspirazione -->
+  <line x1="4" y1="32" x2="14" y2="32"/>
+  <!-- Bocchello mandata -->
+  <line x1="50" y1="32" x2="60" y2="32"/>
+</svg>

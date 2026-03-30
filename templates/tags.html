@@ -1,5 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Genera Tag SOP{% endblock %}
+{% block extra_css %}
+<style>
+    .eq-type-card {
+        cursor: pointer;
+        border: 2px solid #dee2e6;
+        border-radius: .5rem;
+        transition: border-color .2s, box-shadow .2s, transform .15s;
+    }
+    .eq-type-card:hover {
+        border-color: var(--lundbeck-blue);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,56,101,.15);
+    }
+    .eq-type-card.selected {
+        border-color: var(--lundbeck-blue);
+        background-color: var(--lundbeck-light);
+        box-shadow: 0 0 0 3px rgba(0,56,101,.25);
+    }
+</style>
+{% endblock %}
 {% block content %}
 <h2 class="mb-4"><i class="bi bi-tag"></i> Genera Tag SOP</h2>
 
@@ -24,24 +44,97 @@
         <div class="card">
             <div class="card-header">Equipment &mdash; AAA-YYBBBB-XX</div>
             <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Tipo Equipment (AAA)</label>
-                        <select class="form-select" id="eq_type">
-                            {% for code, desc in equipment_types.items() %}
-                            <option value="{{ code }}">{{ code }} - {{ desc }}</option>
-                            {% endfor %}
-                        </select>
+                <!-- Selettore visuale tipo equipment -->
+                <label class="form-label fw-bold mb-2">Tipo Equipment (AAA)</label>
+                <input type="hidden" id="eq_type" value="">
+                <div class="row g-2 mb-3" id="eqCardGrid">
+                    {% for code, desc in equipment_types.items() %}
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                        <div class="card eq-type-card text-center p-2" role="button"
+                             data-eq-code="{{ code }}" onclick="selectEqType(this, '{{ code }}')">
+                            <div class="eq-icon mx-auto mb-1" style="width:48px;height:48px;color:var(--lundbeck-blue);">
+                                {% if code == 'G' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">
+                                  <circle cx="32" cy="32" r="18"/>
+                                  <polygon points="50,32 38,22 38,42" fill="currentColor" stroke="none"/>
+                                  <line x1="4" y1="32" x2="14" y2="32"/>
+                                  <line x1="50" y1="32" x2="60" y2="32"/>
+                                </svg>
+                                {% elif code == 'SI' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">
+                                  <path d="M16,16 L16,60 Q16,72 32,72 Q48,72 48,60 L48,16"/>
+                                  <ellipse cx="32" cy="16" rx="16" ry="6"/>
+                                  <line x1="32" y1="4" x2="32" y2="10"/>
+                                  <line x1="32" y1="72" x2="32" y2="78"/>
+                                </svg>
+                                {% elif code == 'RI' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">
+                                  <path d="M16,16 L16,60 Q16,72 32,72 Q48,72 48,60 L48,16"/>
+                                  <ellipse cx="32" cy="16" rx="16" ry="6"/>
+                                  <line x1="32" y1="4" x2="32" y2="50"/>
+                                  <rect x="26" y="2" width="12" height="6" rx="1" fill="currentColor" stroke="none"/>
+                                  <line x1="22" y1="48" x2="42" y2="48"/>
+                                  <line x1="24" y1="36" x2="40" y2="36"/>
+                                </svg>
+                                {% elif code == 'EI' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">
+                                  <rect x="14" y="14" width="52" height="36" rx="4"/>
+                                  <path d="M14,14 Q6,32 14,50"/>
+                                  <path d="M66,14 Q74,32 66,50"/>
+                                  <line x1="18" y1="26" x2="62" y2="26"/>
+                                  <line x1="18" y1="32" x2="62" y2="32"/>
+                                  <line x1="18" y1="38" x2="62" y2="38"/>
+                                  <line x1="26" y1="6" x2="26" y2="14"/>
+                                  <line x1="54" y1="50" x2="54" y2="58"/>
+                                  <line x1="2" y1="32" x2="8" y2="32"/>
+                                  <line x1="72" y1="32" x2="78" y2="32"/>
+                                </svg>
+                                {% elif code == 'CT' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">
+                                  <path d="M12,72 L20,8 L44,8 L52,72 Z"/>
+                                  <line x1="18" y1="30" x2="46" y2="30"/>
+                                  <line x1="17" y1="45" x2="47" y2="45"/>
+                                  <path d="M28,8 Q30,2 32,8" fill="none"/>
+                                  <path d="M34,8 Q36,2 38,8" fill="none"/>
+                                  <line x1="8" y1="72" x2="56" y2="72"/>
+                                  <line x1="4" y1="36" x2="17" y2="36"/>
+                                  <line x1="47" y1="60" x2="60" y2="60"/>
+                                </svg>
+                                {% elif code == 'PB' %}
+                                <i class="bi bi-moisture display-6"></i>
+                                {% elif code == 'SJ' %}
+                                <i class="bi bi-box-seam display-6"></i>
+                                {% elif code == 'F' %}
+                                <i class="bi bi-funnel display-6"></i>
+                                {% elif code == 'PO' %}
+                                <i class="bi bi-arrow-left-right display-6"></i>
+                                {% elif code == 'VP' %}
+                                <i class="bi bi-shield display-6"></i>
+                                {% elif code == 'AU' %}
+                                <i class="bi bi-lock display-6"></i>
+                                {% elif code == 'GV' %}
+                                <i class="bi bi-cloud display-6"></i>
+                                {% else %}
+                                <i class="bi bi-gear display-6"></i>
+                                {% endif %}
+                            </div>
+                            <small class="fw-bold">{{ code }}</small><br>
+                            <small class="text-muted" style="font-size:.7rem;">{{ desc }}</small>
+                        </div>
                     </div>
-                    <div class="col-md-3">
+                    {% endfor %}
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
                         <label class="form-label">Area/Anno (YY)</label>
                         <input type="text" class="form-control" id="area_year" placeholder="24" maxlength="4">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Numero Sequenza (BBBB)</label>
                         <input type="text" class="form-control" id="seq_number" placeholder="0001" maxlength="4">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Suffisso (XX)</label>
                         <input type="text" class="form-control" id="eq_suffix" value="01" maxlength="2">
                     </div>
@@ -169,6 +262,18 @@
 
 {% block extra_js %}
 <script>
+function selectEqType(card, code) {
+    document.querySelectorAll('.eq-type-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    document.getElementById('eq_type').value = code;
+}
+
+// Select first card on load
+document.addEventListener('DOMContentLoaded', () => {
+    const first = document.querySelector('.eq-type-card');
+    if (first) selectEqType(first, first.dataset.eqCode);
+});
+
 async function generateTag(category) {
     let data = { category };
 

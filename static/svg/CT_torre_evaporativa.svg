@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Profilo torre: rastremata verso l'alto -->
+  <path d="M12,72 L20,8 L44,8 L52,72 Z"/>
+  <!-- Riempimento interno -->
+  <line x1="18" y1="30" x2="46" y2="30"/>
+  <line x1="17" y1="45" x2="47" y2="45"/>
+  <!-- Gocce / vapore in uscita -->
+  <path d="M28,8 Q30,2 32,8" fill="none"/>
+  <path d="M34,8 Q36,2 38,8" fill="none"/>
+  <!-- Bacino inferiore -->
+  <line x1="8" y1="72" x2="56" y2="72"/>
+  <!-- Bocchello ingresso acqua -->
+  <line x1="4" y1="36" x2="17" y2="36"/>
+  <!-- Bocchello uscita acqua -->
+  <line x1="47" y1="60" x2="60" y2="60"/>
+</svg>

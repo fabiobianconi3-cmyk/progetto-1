@@ -13,16 +13,18 @@ tag_bp = Blueprint("tags", __name__)
 
 # --- Equipment tag: AAA-YYBBBB-XX ---
 EQUIPMENT_TYPES = {
-    "PMP": "Pompa",
-    "TK": "Serbatoio",
-    "HX": "Scambiatore di calore",
-    "AGT": "Agitatore",
-    "FLT": "Filtro",
-    "VLV": "Valvola",
-    "CMP": "Compressore",
-    "DRY": "Essiccatore",
-    "REA": "Reattore",
-    "COL": "Colonna",
+    "G": "Pompa centrifuga",
+    "PB": "Pompa a bagno",
+    "SI": "Serbatoio verticale",
+    "SJ": "Serbatoio orizzontale",
+    "RI": "Reattore",
+    "EI": "Scambiatore di calore",
+    "CT": "Torre evaporativa",
+    "F": "Filtro",
+    "PO": "Pompa oscillante",
+    "VP": "Vaso a pressione",
+    "AU": "Autoclave",
+    "GV": "Generatore di vapore",
 }
 
 # --- Instrument types ---

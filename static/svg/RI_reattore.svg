@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Corpo reattore (vessel) -->
+  <path d="M16,16 L16,60 Q16,72 32,72 Q48,72 48,60 L48,16"/>
+  <!-- Tetto ellittico -->
+  <ellipse cx="32" cy="16" rx="16" ry="6"/>
+  <!-- Albero agitatore -->
+  <line x1="32" y1="4" x2="32" y2="50"/>
+  <!-- Motore -->
+  <rect x="26" y="2" width="12" height="6" rx="1" fill="currentColor" stroke="none"/>
+  <!-- Pale agitatore -->
+  <line x1="22" y1="48" x2="42" y2="48"/>
+  <line x1="24" y1="36" x2="40" y2="36"/>
+</svg>

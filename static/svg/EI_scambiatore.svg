@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Mantello (shell) -->
+  <rect x="14" y="14" width="52" height="36" rx="4"/>
+  <!-- Testata sinistra -->
+  <path d="M14,14 Q6,32 14,50"/>
+  <!-- Testata destra -->
+  <path d="M66,14 Q74,32 66,50"/>
+  <!-- Tubi interni -->
+  <line x1="18" y1="26" x2="62" y2="26"/>
+  <line x1="18" y1="32" x2="62" y2="32"/>
+  <line x1="18" y1="38" x2="62" y2="38"/>
+  <!-- Bocchelli shell -->
+  <line x1="26" y1="6" x2="26" y2="14"/>
+  <line x1="54" y1="50" x2="54" y2="58"/>
+  <!-- Bocchelli tubi -->
+  <line x1="2" y1="32" x2="8" y2="32"/>
+  <line x1="72" y1="32" x2="78" y2="32"/>
+</svg>
